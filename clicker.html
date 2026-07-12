@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Perphezel Clicker</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #121212;
+            color: white;
+            text-align: center;
+            padding: 20px;
+            margin: 0;
+            overflow-x: hidden;
+        }
+        h1 { color: #00ffcc; margin-bottom: 5px; }
+        .bio { color: #aaaaaa; font-size: 0.9rem; margin-bottom: 30px; }
+        
+        .score-container {
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: #00ffcc;
+            text-shadow: 0 0 10px rgba(0, 255, 204, 0.2);
+        }
+        
+        .crit-indicator {
+            height: 25px;
+            font-weight: bold;
+            color: #ffcc00;
+            margin-bottom: 15px;
+            font-size: 1.1rem;
+        }
+        
+        #click-btn {
+            background: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 540 480'><path d='M400,165 C480,160 525,230 500,310 C480,350 435,350 415,335 C400,370 390,400 365,420 C320,435 200,435 180,420 C100,350 70,190 100,135 C170,110 320,110 380,140 Z' fill='%23777c7e'/><path d='M398,162 C465,155 510,215 490,285 C475,320 430,320 412,310' fill='none' stroke='white' stroke-width='8'/><ellipse cx='245' cy='140' rx='160' ry='50' fill='%23b07c62'/><path d='M95,170 C140,300 170,410 365,410 C380,370 395,240 375,160' fill='none' stroke='white' stroke-width='4'/></svg>") center no-repeat;
+            background-size: contain;
+            border: none;
+            width: 180px;
+            height: 180px;
+            cursor: pointer;
+            transition: transform 0.05s;
+            outline: none;
+            user-select: none;
+        }
+        #click-btn:active {
+            transform: scale(0.92);
+        }
+
+        .stats {
+            margin: 20px 0;
+            font-size: 1rem;
+            color: #bbbbbb;
+        }
+
+        .upgrade-container {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+        .upgrade-card {
+            background: #1e1e1e;
+            border: 2px solid #333;
+            border-radius: 10px;
+            padding: 15px;
+            width: 200px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+            transition: border-color 0.2s;
+        }
+        .upgrade-card h3 { margin: 0 0 10px 0; color: #00ffcc; font-size: 1.1rem; }
+        .upgrade-card p { margin: 5px 0; font-size: 0.85rem; color: #aaa; }
+        
+        .upgrade-btn {
+            background: #333;
+            color: #fff;
+            border: 1px solid #555;
+            padding: 8px 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 10px;
+            width: 100%;
+            font-weight: bold;
+        }
+        .upgrade-btn.affordable {
+            background: linear-gradient(135deg, #0099ff, #0055ff);
+            color: white;
+            border: none;
+            box-shadow: 0 2px 5px rgba(0, 153, 255, 0.4);
+        }
+        .upgrade-btn.affordable:hover { filter: brightness(1.1); }
+        .upgrade-btn:disabled { cursor: not-allowed; opacity: 0.5; box-shadow: none; }
+
+        .golden-bean {
+            position: fixed;
+            background: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><ellipse cx='50' cy='50' rx='35' ry='45' fill='%23ffcc00'/><ellipse cx='50' cy='50' rx='16' ry='32' fill='%23ffff00'/></svg>") center no-repeat;
+            background-size: contain;
+            width: 70px;
+            height: 70px;
+            cursor: pointer;
+            filter: drop-shadow(0 0 12px #ffcc00);
+            animation: floatAround 10s linear forwards;
+            z-index: 1000;
+            user-select: none;
+        }
+
+        @keyframes floatAround {
+            0% { transform: translate(-100px, 100vh) rotate(0deg); }
+            100% { transform: translate(110vw, -100px) rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Perphezel Clicker</h1>
+    <p class="bio">I am Jonathan. Stay positive. Contact: perphezelailarr@gmail.com</p>
+
+    <div class="score-container">
+        <span id="score">0</span> Cups
+    </div>
+    
+    <div id="crit-msg" class="crit-indicator"></div>
+
+    <button id="click-btn" title="drink coffee"></button>
+
+    <div class="stats">
+        Per Click: +<span id="per-click">1</span> (10% Crit Chance) | Per Second: +<span id="per-second">0</span>
+    </div>
+
+    <h2>Upgrades</h2>
+    <div class="upgrade-container">
+        <!-- Upgrade 1 -->
+        <div class="upgrade-card" id="card-u1">
+            <h3>Sip Mastery</h3>
+            <p>Increases click power by +1</p>
+            <p>Owned: <span id="u1-owned">0</span></p>
+            <button id="u1-btn" class="upgrade-btn">Cost: 15</button>
+        </div>
+        <!-- Upgrade 2 -->
+        <div class="upgrade-card" id="card-u2">
+            <h3>Auto-Brewer</h3>
+            <p>Generates +1 cup per second</p>
+            <p>Owned: <span id="u2-owned">0</span></p>
+            <button id="u2-btn" class="upgrade-btn">Cost: 100</button>
+        </div>
+        <!-- Upgrade 3 -->
+        <div class="upgrade-card" id="card-u3">
+            <h3>Industrial Espresso</h3>
+            <p>Generates +8 cups per second</p>
+            <p>Owned: <span id="u3-owned">0</span></p>
+            <button id="u3-btn" class="upgrade-btn">Cost: 800</button>
+        </div>
+    </div>
+
+    <script>
+        let score = 0;
+        let clickPower = 1;
+        let autoIncome = 0;
+
+        let u1Cost = 15;
+        let u1Owned = 0;
+
+        let u2Cost = 100;
+        let u2Owned = 0;
+
+        let u3Cost = 800;
+        let u3Owned = 0;
+
+        if(localStorage.getItem('perphezel_score_v2')) {
+            score = parseFloat(localStorage.getItem('perphezel_score_v2'));
+            clickPower = parseInt(localStorage.getItem('perphezel_clickPower_v2')) || 1;
+            autoIncome = parseInt(localStorage.getItem('perphezel_autoIncome_v2')) || 0;
+            u1Cost = parseInt(localStorage.getItem('perphezel_u1Cost_v2')) || 15;
+            u1Owned = parseInt(localStorage.getItem('perphezel_u1Owned_v2')) || 0;
+            u2Cost = parseInt(localStorage.getItem('perphezel_u2Cost_v2')) || 100;
+            u2Owned = parseInt(localStorage.getItem('perphezel_u2Owned_v2')) || 0;
+            u3Cost = parseInt(localStorage.getItem('perphezel_u3Cost_v2')) || 800;
+            u3Owned = parseInt(localStorage.getItem('perphezel_u3Owned_v2')) || 0;
+        }
+
+        const scoreDisplay = document.getElementById('score');
+        const perClickDisplay = document.getElementById('per-click');
+        const perSecondDisplay = document.getElementById('per-second');
+        const clickBtn = document.getElementById('click-btn');
+        const critMsg = document.getElementById('crit-msg');
+        
+        const u1Btn = document.getElementById('u1-btn');
+        const u2Btn = document.getElementById('u2-btn');
+        const u3Btn = document.getElementById('u3-btn');
+        
+        const u1OwnedDisplay = document.getElementById('u1-owned');
+        const u2OwnedDisplay = document.getElementById('u2-owned');
+        const u3OwnedDisplay = document.getElementById('u3-owned');
+
+        const card1 = document.getElementById('card-u1');
+        const card2 = document.getElementById('card-u2');
+        const card3 = document.getElementById('card-u3');
+
+        function updateUI() {
+            scoreDisplay.textContent = Math.floor(score);
+            perClickDisplay.textContent = clickPower;
+            perSecondDisplay.textContent = autoIncome;
+            u1OwnedDisplay.textContent = u1Owned;
+            u2OwnedDisplay.textContent = u2Owned;
+            u3OwnedDisplay.textContent = u3Owned;
+            
+            u1Btn.textContent = "Cost: " + u1Cost;
+            u2Btn.textContent = "Cost: " + u2Cost;
+            u3Btn.textContent = "Cost: " + u3Cost;
+
+            handleButtonState(u1Btn, u1Cost, card1);
+            handleButtonState(u2Btn, u2Cost, card2);
+            handleButtonState(u3Btn, u3Cost, card3);
+        }
+
+        function handleButtonState(button, cost, card) {
+            if (score >= cost) {
+                button.classList.add('affordable');
+                button.disabled = false;
+                card.style.borderColor = "#00ffcc";
+            } else {
+                button.classList.remove('affordable');
+                button.disabled = true;
+                card.style.borderColor = "#333";
+            }
+        }
+
+        clickBtn.addEventListener('click', () => {
+            let finalClick = clickPower;
+            if (Math.random() < 0.10) { 
+                finalClick = clickPower * 5;
+                critMsg.textContent = "CRITICAL DRINK! + " + finalClick + " Cups!";
+                setTimeout(() => { critMsg.textContent = ""; }, 800);
+            }
+            
+            score += finalClick;
+            updateUI();
+            saveGame();
+        });
+
+        u1Btn.addEventListener('click', () => {
+            if(score >= u1Cost) {
+                score -= u1Cost;
+                u1Owned++;
+                clickPower += 1;
+                u1Cost = Math.round(u1Cost * 1.4);
+                updateUI();
+                saveGame();
+            }
+        });
+
+        u2Btn.addEventListener('click', () => {
+            if(score >= u2Cost) {
+                score -= u2Cost;
+                u2Owned++;
+                autoIncome += 1;
+                u2Cost = Math.round(u2Cost * 1.4);
+                updateUI();
+                saveGame();
+            }
+        });
+
+        u3Btn.addEventListener('click', () => {
+            if(score >= u3Cost) {
+                score -= u3Cost;
+                u3Owned++;
+                autoIncome += 8;
+                u3Cost = Math.round(u3Cost * 1.4);
+                updateUI();
+                saveGame();
+            }
+        });
+
+        setInterval(() => {
+            if (autoIncome > 0) {
+                score += (autoIncome / 10);
+                updateUI();
+            }
+        }, 100);
+
+        function spawnGoldenBean() {
+            const bean = document.createElement('div');
+            bean.className = 'golden-bean';
+            bean.style.left = Math.random() * 80 + 'vw';
+            
+            bean.addEventListener('click', () => {
+                let reward = Math.max(50, Math.round(autoIncome * 15 + clickPower * 10));
+                score += reward;
+                critMsg.textContent = "🌟 GOLDEN BEAN CRUSHED! +" + reward + " Cups!";
+                setTimeout(() => { critMsg.textContent = ""; }, 2000);
+                bean.remove();
+                updateUI();
+                saveGame();
+            });
+            
+            document.body.appendChild(bean);
+            setTimeout(() => { if(bean.parentNode) bean.remove(); }, 10000);
+            setTimeout(spawnGoldenBean, (Math.random() * 20000) + 20000);
+        }
+        setTimeout(spawnGoldenBean, 15000);
+
+        setInterval(saveGame, 10000);
+
+        function saveGame() {
+            localStorage.setItem('perphezel_score_v2', score);
+            localStorage.setItem('perphezel_clickPower_v2', clickPower);
+            localStorage.setItem('perphezel_autoIncome_v2', autoIncome);
+            localStorage.setItem('perphezel_u1Cost_v2', u1Cost);
+            localStorage.setItem('perphezel_u1Owned_v2', u1Owned);
+            localStorage.setItem('perphezel_u2Cost_v2', u2Cost);
+            localStorage.setItem('perphezel_u2Owned_v2', u2Owned);
+            localStorage.setItem('perphezel_u3Cost_v2', u3Cost);
+            localStorage.setItem('perphezel_u3Owned_v2', u3Owned);
+        }
+
+        updateUI();
+    </script>
+</body>
+</html><!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Perphezel Clicker</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #121212;
+            color: white;
+            text-align: center;
+            padding: 20px;
+            margin: 0;
+            overflow-x: hidden;
+        }
+        h1 { color: #00ffcc; margin-bottom: 5px; }
+        .bio { color: #aaaaaa; font-size: 0.9rem; margin-bottom: 30px; }
+        
+        .score-container {
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: #00ffcc;
+            text-shadow: 0 0 10px rgba(0, 255, 204, 0.2);
+        }
+        
+        .crit-indicator {
+            height: 25px;
+            font-weight: bold;
+            color: #ffcc00;
+            margin-bottom: 15px;
+            font-size: 1.1rem;
+        }
+        
+        #click-btn {
+            background: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 540 480'><path d='M400,165 C480,160 525,230 500,310 C480,350 435,350 415,335 C400,370 390,400 365,420 C320,435 200,435 180,420 C100,350 70,190 100,135 C170,110 320,110 380,140 Z' fill='%23777c7e'/><path d='M398,162 C465,155 510,215 490,285 C475,320 430,320 412,310' fill='none' stroke='white' stroke-width='8'/><ellipse cx='245' cy='140' rx='160' ry='50' fill='%23b07c62'/><path d='M95,170 C140,300 170,410 365,410 C380,370 395,240 375,160' fill='none' stroke='white' stroke-width='4'/></svg>") center no-repeat;
+            background-size: contain;
+            border: none;
+            width: 180px;
+            height: 180px;
+            cursor: pointer;
+            transition: transform 0.05s;
+            outline: none;
+            user-select: none;
+        }
+        #click-btn:active {
+            transform: scale(0.92);
+        }
+
+        .stats {
+            margin: 20px 0;
+            font-size: 1rem;
+            color: #bbbbbb;
+        }
+
+        .upgrade-container {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+        .upgrade-card {
+            background: #1e1e1e;
+            border: 2px solid #333;
+            border-radius: 10px;
+            padding: 15px;
+            width: 200px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+            transition: border-color 0.2s;
+        }
+        .upgrade-card h3 { margin: 0 0 10px 0; color: #00ffcc; font-size: 1.1rem; }
+        .upgrade-card p { margin: 5px 0; font-size: 0.85rem; color: #aaa; }
+        
+        .upgrade-btn {
+            background: #333;
+            color: #fff;
+            border: 1px solid #555;
+            padding: 8px 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 10px;
+            width: 100%;
+            font-weight: bold;
+        }
+        .upgrade-btn.affordable {
+            background: linear-gradient(135deg, #0099ff, #0055ff);
+            color: white;
+            border: none;
+            box-shadow: 0 2px 5px rgba(0, 153, 255, 0.4);
+        }
+        .upgrade-btn.affordable:hover { filter: brightness(1.1); }
+        .upgrade-btn:disabled { cursor: not-allowed; opacity: 0.5; box-shadow: none; }
+
+        .golden-bean {
+            position: fixed;
+            background: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><ellipse cx='50' cy='50' rx='35' ry='45' fill='%23ffcc00'/><ellipse cx='50' cy='50' rx='16' ry='32' fill='%23ffff00'/></svg>") center no-repeat;
+            background-size: contain;
+            width: 70px;
+            height: 70px;
+            cursor: pointer;
+            filter: drop-shadow(0 0 12px #ffcc00);
+            animation: floatAround 10s linear forwards;
+            z-index: 1000;
+            user-select: none;
+        }
+
+        @keyframes floatAround {
+            0% { transform: translate(-100px, 100vh) rotate(0deg); }
+            100% { transform: translate(110vw, -100px) rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Perphezel Clicker</h1>
+    <p class="bio">I am Jonathan. Stay positive. Contact: perphezelailarr@gmail.com</p>
+
+    <div class="score-container">
+        <span id="score">0</span> Cups
+    </div>
+    
+    <div id="crit-msg" class="crit-indicator"></div>
+
+    <button id="click-btn" title="drink coffee"></button>
+
+    <div class="stats">
+        Per Click: +<span id="per-click">1</span> (10% Crit Chance) | Per Second: +<span id="per-second">0</span>
+    </div>
+
+    <h2>Upgrades</h2>
+    <div class="upgrade-container">
+        <!-- Upgrade 1 -->
+        <div class="upgrade-card" id="card-u1">
+            <h3>Sip Mastery</h3>
+            <p>Increases click power by +1</p>
+            <p>Owned: <span id="u1-owned">0</span></p>
+            <button id="u1-btn" class="upgrade-btn">Cost: 15</button>
+        </div>
+        <!-- Upgrade 2 -->
+        <div class="upgrade-card" id="card-u2">
+            <h3>Auto-Brewer</h3>
+            <p>Generates +1 cup per second</p>
+            <p>Owned: <span id="u2-owned">0</span></p>
+            <button id="u2-btn" class="upgrade-btn">Cost: 100</button>
+        </div>
+        <!-- Upgrade 3 -->
+        <div class="upgrade-card" id="card-u3">
+            <h3>Industrial Espresso</h3>
+            <p>Generates +8 cups per second</p>
+            <p>Owned: <span id="u3-owned">0</span></p>
+            <button id="u3-btn" class="upgrade-btn">Cost: 800</button>
+        </div>
+    </div>
+
+    <script>
+        let score = 0;
+        let clickPower = 1;
+        let autoIncome = 0;
+
+        let u1Cost = 15;
+        let u1Owned = 0;
+
+        let u2Cost = 100;
+        let u2Owned = 0;
+
+        let u3Cost = 800;
+        let u3Owned = 0;
+
+        if(localStorage.getItem('perphezel_score_v2')) {
+            score = parseFloat(localStorage.getItem('perphezel_score_v2'));
+            clickPower = parseInt(localStorage.getItem('perphezel_clickPower_v2')) || 1;
+            autoIncome = parseInt(localStorage.getItem('perphezel_autoIncome_v2')) || 0;
+            u1Cost = parseInt(localStorage.getItem('perphezel_u1Cost_v2')) || 15;
+            u1Owned = parseInt(localStorage.getItem('perphezel_u1Owned_v2')) || 0;
+            u2Cost = parseInt(localStorage.getItem('perphezel_u2Cost_v2')) || 100;
+            u2Owned = parseInt(localStorage.getItem('perphezel_u2Owned_v2')) || 0;
+            u3Cost = parseInt(localStorage.getItem('perphezel_u3Cost_v2')) || 800;
+            u3Owned = parseInt(localStorage.getItem('perphezel_u3Owned_v2')) || 0;
+        }
+
+        const scoreDisplay = document.getElementById('score');
+        const perClickDisplay = document.getElementById('per-click');
+        const perSecondDisplay = document.getElementById('per-second');
+        const clickBtn = document.getElementById('click-btn');
+        const critMsg = document.getElementById('crit-msg');
+        
+        const u1Btn = document.getElementById('u1-btn');
+        const u2Btn = document.getElementById('u2-btn');
+        const u3Btn = document.getElementById('u3-btn');
+        
+        const u1OwnedDisplay = document.getElementById('u1-owned');
+        const u2OwnedDisplay = document.getElementById('u2-owned');
+        const u3OwnedDisplay = document.getElementById('u3-owned');
+
+        const card1 = document.getElementById('card-u1');
+        const card2 = document.getElementById('card-u2');
+        const card3 = document.getElementById('card-u3');
+
+        function updateUI() {
+            scoreDisplay.textContent = Math.floor(score);
+            perClickDisplay.textContent = clickPower;
+            perSecondDisplay.textContent = autoIncome;
+            u1OwnedDisplay.textContent = u1Owned;
+            u2OwnedDisplay.textContent = u2Owned;
+            u3OwnedDisplay.textContent = u3Owned;
+            
+            u1Btn.textContent = "Cost: " + u1Cost;
+            u2Btn.textContent = "Cost: " + u2Cost;
+            u3Btn.textContent = "Cost: " + u3Cost;
+
+            handleButtonState(u1Btn, u1Cost, card1);
+            handleButtonState(u2Btn, u2Cost, card2);
+            handleButtonState(u3Btn, u3Cost, card3);
+        }
+
+        function handleButtonState(button, cost, card) {
+            if (score >= cost) {
+                button.classList.add('affordable');
+                button.disabled = false;
+                card.style.borderColor = "#00ffcc";
+            } else {
+                button.classList.remove('affordable');
+                button.disabled = true;
+                card.style.borderColor = "#333";
+            }
+        }
+
+        clickBtn.addEventListener('click', () => {
+            let finalClick = clickPower;
+            if (Math.random() < 0.10) { 
+                finalClick = clickPower * 5;
+                critMsg.textContent = "CRITICAL DRINK! + " + finalClick + " Cups!";
+                setTimeout(() => { critMsg.textContent = ""; }, 800);
+            }
+            
+            score += finalClick;
+            updateUI();
+            saveGame();
+        });
+
+        u1Btn.addEventListener('click', () => {
+            if(score >= u1Cost) {
+                score -= u1Cost;
+                u1Owned++;
+                clickPower += 1;
+                u1Cost = Math.round(u1Cost * 1.4);
+                updateUI();
+                saveGame();
+            }
+        });
+
+        u2Btn.addEventListener('click', () => {
+            if(score >= u2Cost) {
+                score -= u2Cost;
+                u2Owned++;
+                autoIncome += 1;
+                u2Cost = Math.round(u2Cost * 1.4);
+                updateUI();
+                saveGame();
+            }
+        });
+
+        u3Btn.addEventListener('click', () => {
+            if(score >= u3Cost) {
+                score -= u3Cost;
+                u3Owned++;
+                autoIncome += 8;
+                u3Cost = Math.round(u3Cost * 1.4);
+                updateUI();
+                saveGame();
+            }
+        });
+
+        setInterval(() => {
+            if (autoIncome > 0) {
+                score += (autoIncome / 10);
+                updateUI();
+            }
+        }, 100);
+
+        function spawnGoldenBean() {
+            const bean = document.createElement('div');
+            bean.className = 'golden-bean';
+            bean.style.left = Math.random() * 80 + 'vw';
+            
+            bean.addEventListener('click', () => {
+                let reward = Math.max(50, Math.round(autoIncome * 15 + clickPower * 10));
+                score += reward;
+                critMsg.textContent = "🌟 GOLDEN BEAN CRUSHED! +" + reward + " Cups!";
+                setTimeout(() => { critMsg.textContent = ""; }, 2000);
+                bean.remove();
+                updateUI();
+                saveGame();
+            });
+            
+            document.body.appendChild(bean);
+            setTimeout(() => { if(bean.parentNode) bean.remove(); }, 10000);
+            setTimeout(spawnGoldenBean, (Math.random() * 20000) + 20000);
+        }
+        setTimeout(spawnGoldenBean, 15000);
+
+        setInterval(saveGame, 10000);
+
+        function saveGame() {
+            localStorage.setItem('perphezel_score_v2', score);
+            localStorage.setItem('perphezel_clickPower_v2', clickPower);
+            localStorage.setItem('perphezel_autoIncome_v2', autoIncome);
+            localStorage.setItem('perphezel_u1Cost_v2', u1Cost);
+            localStorage.setItem('perphezel_u1Owned_v2', u1Owned);
+            localStorage.setItem('perphezel_u2Cost_v2', u2Cost);
+            localStorage.setItem('perphezel_u2Owned_v2', u2Owned);
+            localStorage.setItem('perphezel_u3Cost_v2', u3Cost);
+            localStorage.setItem('perphezel_u3Owned_v2', u3Owned);
+        }
+
+        updateUI();
+    </script>
+</body>
+</html>
